@@ -23,5 +23,5 @@ lighthouse:
   rules:
     # run MERGE REQUEST PIPELINE if a merge request is created/updated
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # run BRANCH PIPELINE if a commit is pushed on master
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    # run BRANCH PIPELINE if a commit is pushed on main
+    - if: '$CI_COMMIT_BRANCH == "main"'
