@@ -3,6 +3,12 @@ image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.
 stages:
   - test
 
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .next/cache/
+
 workflow:
   rules:
     # run MERGE REQUEST PIPELINE if a merge request is created/updated
