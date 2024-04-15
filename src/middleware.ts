@@ -1,7 +1,12 @@
 import { authMiddleware } from "@clerk/nextjs";
 
 export default authMiddleware({
-  publicRoutes: ["/", "/api/clerk-webhook", "/api/drive-activity/notification"],
+  publicRoutes: [
+    "/",
+    "/api/clerk-webhook",
+    "/api/drive-activity/notification",
+    "/api/payment/success",
+  ],
   ignoredRoutes: [
     "/api/auth/callback/discord",
     "/api/auth/callback/notion",
@@ -12,10 +17,11 @@ export default authMiddleware({
 });
 
 export const config = {
-  matcher: [
-    "/((?!.+.[w]+$|_next).*)",
-    "/",
-    "/(api|trpc)(.*)",
-    "/((?!api|_next/static|_next/image|images|favicon.ico).*)",
-  ],
+  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 };
+
+// https://www.googleapis.com/auth/userinfo.email
+// https://www.googleapis.com/auth/userinfo.profile
+// https://www.googleapis.com/auth/drive.activity.readonly
+// https://www.googleapis.com/auth/drive.metadata
+// https://www.googleapis.com/auth/drive.readonly
