@@ -16,24 +16,37 @@ workflow:
     # run BRANCH PIPELINE if a commit is pushed on any branch
     - if: '$CI_COMMIT_BRANCH'
 
-.prepare-pnpm: &prepare-pnpm
-  - corepack enable
-  - corepack prepare pnpm@latest-8 --activate
+default:
+  image: node:lts-alpine
+  cache: &cache
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .pnpm-store
+      - ./node_modules
+      - apps/web/node_modules
+    policy: pull
+
+
+before_script:
+  - npm i -g pnpm
   - pnpm config set store-dir .pnpm-store
 
 install:
   stage: install
+  interruptible: true
+  cache:
+    <<: *cache
+    policy: push
   script:
-    - *prepare-pnpm
     - pnpm install
 
 build app:
   stage: build-app
   image: node:20
-  dependencies:
-    - install
+  needs:
+    - job: install
+      artifacts: true
   script:
-    - *prepare-pnpm
     - pnpm build
   cache:
     key: ${CI_COMMIT_REF_SLUG}
@@ -44,7 +57,6 @@ build app:
     paths:
       - .next
       - build
-      - node_modules
     expire_in: 1 day
 
 build image:
@@ -66,12 +78,13 @@ build image:
 lighthouse:
   allow_failure: false
   script:
-    - *prepare-pnpm
     - npm run lighthouse
   stage: test
-  dependencies:
-    - install
-    - build app
+  needs:
+    - job: install
+      artifacts: true
+    - job: build-app
+      artifacts: true
   rules:
     # run MERGE REQUEST PIPELINE if a merge request is created/updated
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
