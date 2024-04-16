@@ -17,7 +17,6 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
 
 default:
-  image: node:lts-alpine
   cache: &cache
     key: "$CI_COMMIT_REF_SLUG"
     paths:
