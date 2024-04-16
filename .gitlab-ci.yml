@@ -82,7 +82,7 @@ lighthouse:
   needs:
     - job: install
       artifacts: true
-    - job: build-app
+    - job: build app
       artifacts: true
   rules:
     # run MERGE REQUEST PIPELINE if a merge request is created/updated
