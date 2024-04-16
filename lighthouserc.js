@@ -2,7 +2,7 @@ module.exports = {
   ci: {
     collect: {
       numberOfRuns: 5,
-      startServerCommand: "npm start",
+      startServerCommand: "pnpm start",
       url: ["http://localhost:3000"],
       settings: {
         onlyCategories: [

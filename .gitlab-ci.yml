@@ -1,13 +1,10 @@
 image: cypress/browsers:node-20.12.0-chrome-123.0.6312.86-1-ff-124.0.2-edge-123.0.2420.65-1
 
 stages:
+  - install
+  - build-app
+  - build-image
   - test
-
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
-    - .next/cache/
 
 workflow:
   rules:
@@ -19,13 +16,61 @@ workflow:
     # run BRANCH PIPELINE if a commit is pushed on any branch
     - if: '$CI_COMMIT_BRANCH'
 
+.prepare-pnpm: &prepare-pnpm
+  - corepack enable
+  - corepack prepare pnpm@latest-8 --activate
+  - pnpm config set store-dir .pnpm-store
+
+install:
+  stage: install
+  script:
+    - *prepare-pnpm
+    - pnpm install
+
+build app:
+  stage: build-app
+  image: node:20
+  dependencies:
+    - install
+  script:
+    - *prepare-pnpm
+    - pnpm build
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .next/cache/
+  artifacts:
+    paths:
+      - .next
+      - build
+    expire_in: 1 day
+
+build image:
+  stage: build-image
+  image: docker:latest
+  services:
+   - docker:dind
+  dependencies:
+    - install
+    - build-app
+  script:
+    - docker info
+    - echo $CI_REGISTRY_PASSWORD | docker login --username $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG || docker pull $CI_REGISTRY_IMAGE:master || true
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --cache-from=$CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME --cache-from=$CI_REGISTRY_IMAGE:master --shm-size 512M .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
 lighthouse:
   allow_failure: false
   script:
-    - npm install
-    - npm run build
+    - *prepare-pnpm
     - npm run lighthouse
   stage: test
+  dependencies:
+    - install
+    - build-app
   rules:
     # run MERGE REQUEST PIPELINE if a merge request is created/updated
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
