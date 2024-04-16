@@ -35,15 +35,16 @@ build app:
   script:
     - *prepare-pnpm
     - pnpm build
-  # cache:
-  #   key: ${CI_COMMIT_REF_SLUG}
-  #   paths:
-  #     - node_modules/
-  #     - .next/cache/
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .next/cache/
   artifacts:
     paths:
       - .next
       - build
+      - node_modules
     expire_in: 1 day
 
 build image:
