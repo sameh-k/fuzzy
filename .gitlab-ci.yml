@@ -53,7 +53,7 @@ build image:
    - docker:dind
   dependencies:
     - install
-    - build-app
+    - build app
   script:
     - docker info
     - echo $CI_REGISTRY_PASSWORD | docker login --username $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
@@ -70,7 +70,7 @@ lighthouse:
   stage: test
   dependencies:
     - install
-    - build-app
+    - build app
   rules:
     # run MERGE REQUEST PIPELINE if a merge request is created/updated
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
