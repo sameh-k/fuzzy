@@ -26,13 +26,12 @@ default:
     policy: pull
 
 
-before_script:
-  - npm i -g pnpm
-  - pnpm config set store-dir .pnpm-store
-
 install:
   stage: install
   interruptible: true
+  before_script:
+    - npm i -g pnpm
+    - pnpm config set store-dir .pnpm-store
   cache:
     <<: *cache
     policy: push
@@ -45,6 +44,9 @@ build app:
   needs:
     - job: install
       artifacts: true
+  before_script:
+    - npm i -g pnpm
+    - pnpm config set store-dir .pnpm-store
   script:
     - pnpm build
   cache:
@@ -63,9 +65,11 @@ build image:
   image: docker:latest
   services:
    - docker:dind
-  dependencies:
-    - install
-    - build app
+  needs:
+    - job: install
+      artifacts: true
+    - job: build app
+      artifacts: true
   script:
     - docker info
     - echo $CI_REGISTRY_PASSWORD | docker login --username $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
@@ -74,10 +78,11 @@ build image:
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
 lighthouse:
   allow_failure: false
   script:
-    - npm run lighthouse
+    - pnpm run lighthouse
   stage: test
   needs:
     - job: install
