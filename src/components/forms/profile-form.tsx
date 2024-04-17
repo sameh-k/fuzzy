@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,25 +16,35 @@ import { Input } from "@/components/ui/input";
 import { Button } from "../ui/button";
 import { Loader2 } from "lucide-react";
 
-type Props = {};
+type Props = {
+  user: any;
+  onUpdate?: any;
+};
 
-const ProfileForm = (props: Props) => {
+const ProfileForm = ({ user, onUpdate }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof EditUserProfileSchema>>({
     mode: "onChange",
     resolver: zodResolver(EditUserProfileSchema),
     defaultValues: {
-      name: "",
-      email: "",
+      name: user.name,
+      email: user.email,
     },
   });
 
-  function onSubmit(values: z.infer<typeof EditUserProfileSchema>) {
+  async function onSubmit(values: z.infer<typeof EditUserProfileSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values);
+    setIsLoading(true);
+    await onUpdate(values.name);
+    setIsLoading(false);
   }
+
+  useEffect(() => {
+    form.reset({ name: user.name, email: user.email });
+  }, [user]);
 
   return (
     <Form {...form}>
@@ -50,21 +60,21 @@ const ProfileForm = (props: Props) => {
             <FormItem>
               <FormLabel className="text-lg">User Name</FormLabel>
               <FormControl>
-                <Input placeholder="Name" {...field} />
+                <Input {...field} placeholder="Name" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <FormField
-          disabled={true}
+          disabled={isLoading}
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-lg">Email</FormLabel>
               <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
+                <Input {...field} placeholder="Email" type="email" />
               </FormControl>
               <FormMessage />
             </FormItem>
